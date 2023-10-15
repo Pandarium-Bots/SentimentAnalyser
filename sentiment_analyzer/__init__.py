@@ -1,0 +1,1 @@
+from .analise_de_sentimento import AnaliseDeSentimento
