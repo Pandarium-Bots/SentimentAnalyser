@@ -7,7 +7,6 @@ import sys
 
 
 
-
 app = Flask(__name__)
 app.debug=True
 
@@ -22,6 +21,7 @@ def run_pipeline(text_column: str, sep: str) -> DataFrame:
     :param sep: Caractere delimitador do arquivo CSV de entrada.
     :return: DataFrame com as novas colunas de sentimento.
     """
+
     print(request.data.decode('utf-8'), file=sys.stderr)
     in_csv = request.data.decode('utf-8')
 
@@ -30,24 +30,23 @@ def run_pipeline(text_column: str, sep: str) -> DataFrame:
 
     # Informacoes do dataset
     df.info()
-    
+
     prep_dado = PreparaDado()
     df = prep_dado.pre_processing(df=df,text_column=text_column)
     
     #aplica VADER para analise de sentimento
     df["sentiment"] = df['cleared_text'].apply(AnaliseDeSentimento.get_sentiment)
-    
+
     # Classificando o sentimento em positivo, negativo ou neutro
     df["sentiment_class"] = df["sentiment"].apply(AnaliseDeSentimento.classify_sentiment)
 
     # Salva o dataframe em um arquivo CSV
     csv_data = df.to_csv(index=False)
-    
+
     response = Response(csv_data,content_type='text/csv')
 
     # Retorna o dataframe com as novas colunas de sentimento
     return response
-
 
 @app.route('/sentiment_analyzer_text', methods=['POST'])
 def run_pipeline_text() -> str:
@@ -69,14 +68,8 @@ def run_pipeline_text() -> str:
                        'Texto apos o tratamento':texto_limpo,
                        'Classificacao do Sentimento':sentimento_classificado
                        })
-    
     return retorno, 200
-
-
 
 #Iniciar o aplicativo se este arquivo for executado diretamente
 if __name__ == '__main__':
     app.run()
-
-
-
