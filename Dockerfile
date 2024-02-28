@@ -1,4 +1,4 @@
-FROM pandas/pandas:alpine
+FROM pandas/pandas:pip-all
 
 WORKDIR /app
 
