@@ -2,7 +2,6 @@ import re
 import sys
 import nltk
 import numpy as np
-import traceback
 import argostranslate.package
 import argostranslate.translate
 from urllib.parse import urlparse
@@ -16,12 +15,6 @@ class PreparaDado():
     def __init__(self):
         pass
     
-    def error_debug(self, func):
-        global erro_subfuncao
-        erro_subfuncao=func
-        print(f"Erro na {erro_subfuncao} : ")
-        traceback.print_exec()
-
     def data_prep(self, text: str, translation) -> str:
         """
         Função que realiza a preparacao do dado da coluna de texto para a analise de sentime textnto.    
