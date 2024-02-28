@@ -3,37 +3,34 @@ import sys
 import nltk
 import numpy as np
 import traceback
+import argostranslate.package
+import argostranslate.translate
 from urllib.parse import urlparse
 from nltk.corpus import stopwords
 from pandas.core.frame import DataFrame
 from nltk.stem import WordNetLemmatizer
-from deep_translator import GoogleTranslator
+from utils.translator import traduz_texto_2, configura_traducao
 
 class PreparaDado():
 
     def __init__(self):
         pass
     
-    erro_subfuncao = None
-
-    def error_debug(self,func):
+    def error_debug(self, func):
         global erro_subfuncao
         erro_subfuncao=func
         print(f"Erro na {erro_subfuncao} : ")
         traceback.print_exec()
 
-    def data_prep(self,text: str) -> str:
+    def data_prep(self, text: str, translation) -> str:
         """
-        Função que realiza a preparacao do dado da coluna de texto para a analise de sentimento.    
+        Função que realiza a preparacao do dado da coluna de texto para a analise de sentime textnto.    
         :param text: Texto a ser pré-processado.
         :return: Texto pré-processado.
         """
 
-
         # detecta o idioma do texto e faz a traducao para Ingles 
-        text = self.translate_to_english(text)
-
-        print("****TRADUZIDOOOOOOOOOO: "+text,file=sys.stderr)
+        text = traduz_texto_2(text, translation)
 
         # Removendo brackets 
         text = re.sub(r'[][)(]',' ', text)
@@ -67,13 +64,12 @@ class PreparaDado():
         lemmatizer = WordNetLemmatizer()
         tokens = [lemmatizer.lemmatize(word) for word in tokens]
         
-        return ' '.join(tokens)
-
+        # return ' '.join(tokens)
+        return text
 
     def pre_processing(self, df: DataFrame, text_column: str) -> DataFrame:
         """
         Função para realizar pré-processamento do dataset removendo registros vazios e duplicados.
-
 
         :param df: DataFrame com os dados a serem preparados.
         :param text_column: Nome da coluna contendo o texto.
@@ -82,7 +78,7 @@ class PreparaDado():
 
         # Substitui strings vazias por NaN
         df[text_column] = df[text_column].replace('', np.nan)
-        # Textos Vazios/nulos
+        # textos Vazios/nulos
         print('Textos nulos: ', df[text_column].isnull().sum())
         
         # Remove registros com coluna de texto vazias
@@ -94,20 +90,13 @@ class PreparaDado():
         # Remove registros duplicados
         df = df.drop_duplicates().reset_index(drop=True)
         print('Formato do dataset após remoção:', df.shape)
-        
+
+        translation = configura_traducao()
+
         # Aplica a função de pré-processamento a todo o DataFrame
-        df['cleared_text'] = df[text_column].apply(self.data_prep)
+        # df['cleared_text'] = df[text_column].apply(self.data_prep)
+        df['cleared_text'] = df[text_column].apply(lambda x: self.data_prep(x, translation))
         
         # Retorna df limpo e tratado para melhor analise
         return df
 
-    def translate_to_english(self,text: str) -> str:
-        """
-        Função que realiza a traducao do texto para ingles para o VADER obter 
-        uma precisao melhor na analise de sentimento.    
-        :param text: Texto a ser traduzido.
-        :return: Texto traduzido para ingles.
-        """
-        text = GoogleTranslator(source='auto', target='english').translate(text)
-        
-        return text

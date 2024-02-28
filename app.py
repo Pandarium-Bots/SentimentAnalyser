@@ -1,14 +1,26 @@
 from pandas.core.frame import DataFrame
 from datetime import datetime
 from flask import Flask, render_template, send_from_directory,jsonify,request,Response
-from utils import PreparaDado
+from utils import PreparaDado, traduz_lista, traduz_texto, install_translator_packages
 from sentiment_analyzer import AnaliseDeSentimento
 import sys
+from utils import configura_traducao
 
-
+install_translator_packages()
 
 app = Flask(__name__)
 app.debug=True
+
+@app.route('/static/<path:filename>')
+def custom_static(filename):
+    return {'arquivo':filename}
+    # return send_from_directory(app.root_path + '/static/', filename)
+
+@app.route('/')
+@app.route('/inicio')
+def home():
+    return render_template('sentiment_analyzer.html',titulo='Início')
+
 
 @app.route('/sentiment_analyzer_csv/<string:text_column>/<string:sep>', methods=['POST'])
 @app.route('/sentiment_analyzer_csv/<string:text_column>/<string:sep>/', methods=['POST'])
@@ -22,7 +34,7 @@ def run_pipeline(text_column: str, sep: str) -> DataFrame:
     :return: DataFrame com as novas colunas de sentimento.
     """
 
-    print(request.data.decode('utf-8'), file=sys.stderr)
+    # print(request.data.decode('utf-8'), file=sys.stderr)
     in_csv = request.data.decode('utf-8')
 
     # Carregar o dataset
@@ -56,9 +68,10 @@ def run_pipeline_text() -> str:
     :param text_column: 
     """
     texto_para_analise = request.data.decode('utf-8')
-    
+    print(texto_para_analise, file=sys.stderr)
+    translation = configura_traducao()
     prep_dado = PreparaDado()
-    texto_limpo = prep_dado.data_prep(texto_para_analise)
+    texto_limpo = prep_dado.data_prep(texto_para_analise, translation)
 
     valor_sentimento = AnaliseDeSentimento.get_sentiment(texto_limpo)
 

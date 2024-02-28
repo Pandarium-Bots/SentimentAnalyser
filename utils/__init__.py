@@ -1,2 +1,2 @@
 from .prepara_dado import PreparaDado
-import traceback
+from .translator import *
